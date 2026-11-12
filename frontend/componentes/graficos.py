@@ -93,7 +93,7 @@ def criar_grafico(df, coluna, cor, nome):
         regra,
         pontos
     ).properties(
-        height=300
+        height=210
     )
 
     return grafico
@@ -105,7 +105,7 @@ def criar_grafico(df, coluna, cor, nome):
 
 def renderizar_graficos(df):
 
-    st.subheader("Histórico das medições")
+    st.subheader("Variação das condições do ambiente")
 
     df_graficos = df.copy()
 
@@ -163,5 +163,3 @@ def renderizar_graficos(df):
             grafico,
             use_container_width=True
         )
-
-    st.divider()

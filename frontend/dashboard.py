@@ -198,7 +198,7 @@ def atualizar_painel():
     # HISTÓRICO COMPLETO
     # --------------------------------------
 
-    st.subheader("Histórico de medições")
+    st.subheader("Registros do ambiente")
 
     df_exibicao = df.sort_values(
         "horario",
@@ -215,14 +215,9 @@ def atualizar_painel():
     st.dataframe(
         df_exibicao,
         use_container_width=True,
-        hide_index=True
+        hide_index=True,
+        height=150
     )
-
-    st.write("Horário recebido da API:")
-    st.write(leituras[-1]["horario"])
-
-    st.write("Horário após conversão:")
-    st.write(df["horario"].iloc[-1])
 
 # --------------------------------------
 # EXECUÇÃO

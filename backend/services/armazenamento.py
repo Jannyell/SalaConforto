@@ -1,12 +1,18 @@
+
 import pandas as pd
+
 from pathlib import Path
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 
 # --------------------------------------
-# CAMINHO DO ARQUIVO CSV
+# CONFIGURAÇÕES
 # --------------------------------------
 
-ARQUIVO_CSV = (
+FUSO_HORARIO = ZoneInfo("America/Fortaleza")
+
+ARQUIVO = (
     Path(__file__).resolve().parent.parent
     / "data"
     / "medicoes.csv"
@@ -26,21 +32,59 @@ COLUNAS = [
 
 def inicializar():
 
-    # Garante que a pasta data exista
-    ARQUIVO_CSV.parent.mkdir(
+    ARQUIVO.parent.mkdir(
         parents=True,
         exist_ok=True
     )
 
-    # Cria o CSV caso não exista
-    if not ARQUIVO_CSV.exists():
+    if not ARQUIVO.exists():
 
         pd.DataFrame(
             columns=COLUNAS
         ).to_csv(
-            ARQUIVO_CSV,
+            ARQUIVO,
             index=False
         )
+
+
+# --------------------------------------
+# LIMPEZA DE MEDIÇÕES ANTIGAS
+# --------------------------------------
+
+def manter_apenas_hoje():
+
+    inicializar()
+
+    dados = pd.read_csv(ARQUIVO)
+
+    if dados.empty:
+        return
+
+    # Obtém a data atual de Fortaleza
+    hoje = datetime.now(FUSO_HORARIO).date()
+
+    # Converte os horários para datetime
+    horarios = pd.to_datetime(
+        dados["horario"],
+        errors="coerce",
+        utc=True
+    )
+
+    # Converte os horários para Fortaleza
+    horarios = horarios.dt.tz_convert(
+        "America/Fortaleza"
+    )
+
+    # Identifica quais registros pertencem ao dia atual
+    dados = dados[
+        horarios.dt.date == hoje
+    ].copy()
+
+    # Reescreve o CSV somente com os registros válidos
+    dados.to_csv(
+        ARQUIVO,
+        index=False
+    )
 
 
 # --------------------------------------
@@ -51,13 +95,16 @@ def salvar(medicao):
 
     inicializar()
 
-    dados = pd.DataFrame(
+    # Remove registros de dias anteriores
+    manter_apenas_hoje()
+
+    novo_registro = pd.DataFrame(
         [medicao],
         columns=COLUNAS
     )
 
-    dados.to_csv(
-        ARQUIVO_CSV,
+    novo_registro.to_csv(
+        ARQUIVO,
         mode="a",
         header=False,
         index=False
@@ -72,16 +119,10 @@ def listar():
 
     inicializar()
 
-    dados = pd.read_csv(ARQUIVO_CSV)
+    # Garante que somente os registros de hoje permaneçam
+    manter_apenas_hoje()
 
-    # Garante a presença das colunas esperadas
-    dados = dados.reindex(columns=COLUNAS)
-
-    # Substitui valores ausentes por None
-    dados = dados.astype(object).where(
-        pd.notna(dados),
-        None
-    )
+    dados = pd.read_csv(ARQUIVO)
 
     return dados.to_dict(
         orient="records"
@@ -89,18 +130,16 @@ def listar():
 
 
 # --------------------------------------
-# LIMPAR HISTÓRICO
+# LIMPAR TODAS AS MEDIÇÕES
 # --------------------------------------
 
 def limpar():
 
     inicializar()
 
-    dados = pd.DataFrame(
+    pd.DataFrame(
         columns=COLUNAS
-    )
-
-    dados.to_csv(
-        ARQUIVO_CSV,
+    ).to_csv(
+        ARQUIVO,
         index=False
     )
