@@ -1,6 +1,7 @@
 
 import math
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from services import armazenamento
 from services import calculo
@@ -38,7 +39,7 @@ def registrar_leitura(dados):
 
     # Monta a leitura
     leitura = {
-        "horario": datetime.now().astimezone().isoformat(timespec="seconds"),
+        "horario": datetime.now(ZoneInfo("America/Fortaleza")).isoformat(timespec="seconds"),
         "temperatura": temperatura,
         "umidade": umidade,
         "sensacao_termica": sensacao

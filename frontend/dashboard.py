@@ -6,6 +6,8 @@ from componentes.sidebar import renderizar_sidebar
 from componentes.metricas import renderizar_metricas
 from componentes.graficos import renderizar_graficos
 
+from estilo.dashboardestilo import carregar_estilo
+
 
 # --------------------------------------
 # CONFIGURAÇÕES DA INTERFACE
@@ -24,11 +26,17 @@ URL_API = "http://127.0.0.1:5000/api/leituras"
 # TÍTULO
 # --------------------------------------
 
-st.title("🌡️ SalaConforto")
+st.title("SalaConforto")
 st.caption(
     "Sistema de monitoramento de temperatura, "
     "umidade e sensação térmica"
 )
+
+# --------------------------------------
+# CARREGAR ESTILO DA DASHBOARD
+# --------------------------------------
+
+carregar_estilo()
 
 # --------------------------------------
 # CONFIGURAÇÃO DO LIMITE
@@ -124,12 +132,24 @@ def atualizar_painel():
     # TRATAMENTO DOS DADOS
     # --------------------------------------
 
+    
+# --------------------------------------
+# TRATAMENTO DOS DADOS
+# --------------------------------------
+
+    # Converte os horários para UTC
     df["horario"] = pd.to_datetime(
         df["horario"],
         errors="coerce",
         utc=True
     )
 
+    # Converte para o horário de Fortaleza
+    df["horario"] = df["horario"].dt.tz_convert(
+        "America/Fortaleza"
+    )
+
+    # Converte as colunas numéricas
     colunas_numericas = [
         "temperatura",
         "umidade",
@@ -137,18 +157,17 @@ def atualizar_painel():
     ]
 
     for coluna in colunas_numericas:
-
         df[coluna] = pd.to_numeric(
             df[coluna],
             errors="coerce"
         )
 
+    # Remove registros inválidos
     df = df.dropna(
         subset=colunas_obrigatorias
     )
 
     if df.empty:
-
         st.warning(
             "Não existem medições válidas disponíveis."
         )
@@ -199,9 +218,15 @@ def atualizar_painel():
         hide_index=True
     )
 
+    st.write("Horário recebido da API:")
+    st.write(leituras[-1]["horario"])
+
+    st.write("Horário após conversão:")
+    st.write(df["horario"].iloc[-1])
 
 # --------------------------------------
 # EXECUÇÃO
 # --------------------------------------
 
 atualizar_painel()
+
