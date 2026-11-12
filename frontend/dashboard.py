@@ -2,6 +2,10 @@ import streamlit as st
 import requests
 import pandas as pd
 
+from componentes.sidebar import renderizar_sidebar
+from componentes.metricas import renderizar_metricas
+from componentes.graficos import renderizar_graficos
+
 
 # --------------------------------------
 # CONFIGURAÇÕES DA INTERFACE
@@ -26,25 +30,11 @@ st.caption(
     "umidade e sensação térmica"
 )
 
-st.divider()
-
-
 # --------------------------------------
 # CONFIGURAÇÃO DO LIMITE
 # --------------------------------------
 
-st.subheader("Configuração de conforto térmico")
-
-limite = st.number_input(
-    "Defina o limite máximo de sensação térmica (°C):",
-    min_value=0.0,
-    max_value=60.0,
-    value=30.0,
-    step=0.5
-)
-
-st.divider()
-
+limite = renderizar_sidebar()
 
 # --------------------------------------
 # PAINEL DE MONITORAMENTO
@@ -176,89 +166,14 @@ def atualizar_painel():
     # --------------------------------------
     # INDICADORES PRINCIPAIS
     # --------------------------------------
-
-    coluna1, coluna2, coluna3 = st.columns(3)
-
-    with coluna1:
-
-        st.metric(
-            "🌡️ Temperatura",
-            f"{ultima['temperatura']:.1f} °C"
-        )
-
-    with coluna2:
-
-        st.metric(
-            "💧 Umidade",
-            f"{ultima['umidade']:.1f}%"
-        )
-
-    with coluna3:
-
-        st.metric(
-            "🔥 Sensação térmica",
-            f"{ultima['sensacao_termica']:.1f} °C"
-        )
-
-    # --------------------------------------
-    # ALERTA DE SENSAÇÃO TÉRMICA
-    # --------------------------------------
-
-    if ultima["sensacao_termica"] >= limite:
-
-        st.error(
-            f"⚠️ Atenção! A sensação térmica está em "
-            f"{ultima['sensacao_termica']:.1f} °C, "
-            f"atingindo ou ultrapassando o limite "
-            f"de {limite:.1f} °C."
-        )
-
-    else:
-
-        st.success(
-            f"✅ Sensação térmica dentro do limite definido "
-            f"({limite:.1f} °C)."
-        )
-
-    st.divider()
+    
+    renderizar_metricas(ultima, limite)
 
     # --------------------------------------
     # GRÁFICOS
     # --------------------------------------
 
-    st.subheader("Histórico das medições")
-
-    grafico1, grafico2 = st.columns(2)
-
-    with grafico1:
-
-        st.markdown("**🌡️ Temperatura**")
-
-        grafico_temperatura = (
-            df.set_index("horario")[["temperatura"]]
-        )
-
-        st.line_chart(grafico_temperatura)
-
-    with grafico2:
-
-        st.markdown("**💧 Umidade**")
-
-        grafico_umidade = (
-            df.set_index("horario")[["umidade"]]
-        )
-
-        st.line_chart(grafico_umidade)
-
-    st.markdown("**🔥 Sensação térmica**")
-
-    grafico_sensacao = (
-        df.set_index("horario")[["sensacao_termica"]]
-    )
-
-    st.line_chart(grafico_sensacao)
-
-    st.divider()
+    renderizar_graficos(df)
 
     # --------------------------------------
     # HISTÓRICO COMPLETO
